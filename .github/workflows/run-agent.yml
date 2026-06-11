@@ -1,0 +1,41 @@
+name: Run Orbis Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "What should the agent do?"
+        required: true
+        default: "What is the current weather in New York City?"
+      tool_query:
+        description: "Keyword to find relevant APIs (e.g. weather, finance, search)"
+        required: true
+        default: "weather"
+      tool_limit:
+        description: "Max number of APIs to load (1-20)"
+        required: false
+        default: "5"
+  push:
+    branches: [main]
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Orbis agent
+        env:
+          OPENAI_API_KEY:     ${{ secrets.OPENAI_API_KEY }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
+          AGENT_TASK:         ${{ github.event.inputs.task || 'What is the current weather in New York City?' }}
+          TOOL_QUERY:         ${{ github.event.inputs.tool_query || 'weather' }}
+          TOOL_LIMIT:         ${{ github.event.inputs.tool_limit || '5' }}
+        run: npm run agent
